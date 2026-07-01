@@ -4,4 +4,3 @@ dist/
 .vite/
 *.log
 .env.prod
-apps/

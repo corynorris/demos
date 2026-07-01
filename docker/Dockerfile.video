@@ -6,6 +6,11 @@ RUN mix deps.get
 COPY config/ config/
 COPY lib/ lib/
 COPY priv/ priv/
+# Phoenix config reads SECRET_KEY_BASE at compile time in prod
+ARG SECRET_KEY_BASE=dummy-key-base-for-compile-only
+ARG SECRET_KEY=dummy-secret-for-compile-only
+ENV SECRET_KEY_BASE=${SECRET_KEY_BASE}
+ENV SECRET_KEY=${SECRET_KEY}
 RUN MIX_ENV=prod mix compile
 
 # Build frontend assets
@@ -15,8 +20,6 @@ COPY assets/pnpm-lock.yaml assets/package.json ./
 RUN corepack enable && pnpm install --no-frozen-lockfile --ignore-scripts && pnpm rebuild
 COPY assets/ . .
 RUN rm -f pnpm-workspace.yaml
-# Phoenix webpack outputs to ../../priv/static relative to assets/
-# Create the target dir and run the build
 RUN mkdir -p /app/../priv/static && pnpm run deploy
 
 FROM elixir:1.7-alpine

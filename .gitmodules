@@ -25,3 +25,6 @@
 [submodule "apps/video-api"]
 	path = apps/video-api
 	url = https://github.com/corynorris/video-api.git
+[submodule "apps/tilemap"]
+	path = apps/tilemap
+	url = https://github.com/corynorris/tilemap.git

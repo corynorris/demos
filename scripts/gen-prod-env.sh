@@ -47,6 +47,7 @@ DOMAIN=$(ask "Domain" "demos.corynorris.me")
 SHORTENER_URL=$(ask "URL shortener base URL" "https://${DOMAIN}/s")
 VIDEO_KEY_BASE=$(gen 64)
 VIDEO_SECRET=$(gen 32)
+HMAC_KEY=$(gen 32)
 
 cat > "$OUT" <<EOF
 # demos.corynorris.me production env — generated $(date -u +%FT%TZ)
@@ -67,6 +68,7 @@ BASE_URL=${SHORTENER_URL}
 # ===================
 # Spaced Repetition (Rust/Axum)
 # ===================
+HMAC_KEY=${HMAC_KEY}
 DATABASE_URL=postgres://demos:\${POSTGRES_PASSWORD}@db:5432/spaced_repetition
 
 # ===================

@@ -1,4 +1,8 @@
-demos.corynorris.me {
+# Caddy reverse proxy — HTTP only.
+# Cloudflare Tunnel handles TLS termination and routes traffic here.
+# Caddy routes by path prefix to each app container.
+
+:80 {
     # Static SPAs (client-side routing handled by nginx try_files)
     handle_path /roguelike* {
         reverse_proxy roguelike:80
@@ -12,7 +16,7 @@ demos.corynorris.me {
         reverse_proxy recipebox:80
     }
 
-    # Node.js apps (Express servers with Socket.IO)
+    # Node.js apps (Express + Socket.IO)
     handle_path /voting* {
         reverse_proxy voting:8090
     }
@@ -25,12 +29,13 @@ demos.corynorris.me {
         reverse_proxy comments:3001
     }
 
-    # URL shortener (Express)
+    # URL shortener
     handle_path /s* {
         reverse_proxy shortener:3002
     }
 
-    # Spaced repetition (nginx serves frontend + proxies /api/* to Rust)
+    # Spaced repetition
+    # srs-web (nginx) serves the SPA and proxies /api/* → srs-api internally
     handle_path /srs* {
         reverse_proxy srs-web:80
     }
@@ -40,12 +45,43 @@ demos.corynorris.me {
         reverse_proxy video:4000
     }
 
-    # Landing page
+    # Fallback landing page
     handle {
-        respond "Demos — corynorris.me" 200
+        respond <<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demos — corynorris.me</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #333; }
+  h1 { margin-bottom: 0.25rem; }
+  ul { padding-left: 1.25rem; }
+  li { margin: 0.4rem 0; }
+  a { color: #0366d6; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<h1>Demos</h1>
+<p>Collection of demo apps — pick one:</p>
+<ul>
+<li><a href="/roguelike">/roguelike</a> — Dungeon crawler game</li>
+<li><a href="/life">/life</a> — Conway's Game of Life</li>
+<li><a href="/recipebox">/recipebox</a> — Recipe manager</li>
+<li><a href="/voting">/voting</a> — Tournament voting</li>
+<li><a href="/chat">/chat</a> — Real-time chat</li>
+<li><a href="/comments">/comments</a> — Comment box</li>
+<li><a href="/s">/s</a> — URL shortener</li>
+<li><a href="/srs">/srs</a> — Spaced repetition</li>
+<li><a href="/video">/video</a> — Video API</li>
+</ul>
+</body>
+</html>
+HTML 200
     }
 
-    # Logging
     log {
         output stdout
     }

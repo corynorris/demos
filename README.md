@@ -19,69 +19,75 @@ Umbrella repository for all demo apps, deployed via **Dokploy** to `demos.coryno
 ## Architecture
 
 ```
-demos.corynorris.me
-         │
-    ┌────┴────┐
-    │  Caddy   │  (reverse proxy + automatic HTTPS)
-    └────┬────┘
-         │
-    ┌────┼──────────────────────────────┐
-    │    │         Services              │
-    │ roguelike  life  recipebox         │    Static SPAs (nginx)
-    │ voting  chat  comments  shortener  │    Node.js (Express)
-    │ srs-api  srs-web                  │    Rust + nginx
-    │ video                             │    Elixir/Phoenix
-    │ postgres  mongo                   │    Databases
-    └───────────────────────────────────┘
+                     Cloudflare Tunnel (TLS)
+                              │
+                    dokploy-network (shared)
+                              │
+                        ┌─────┴─────┐
+                        │   Caddy    │  :80 HTTP only
+                        └─────┬─────┘
+                              │
+                    ┌─────────┼─────────────────────────┐
+                    │   internal network                 │
+                    │                                    │
+                    │  roguelike  life  recipebox        │
+                    │  voting  chat  comments  shortener │
+                    │  srs-api  srs-web  video           │
+                    │  db (postgres)  mongo              │
+                    └────────────────────────────────────┘
 ```
 
-## Requirements
+- **Cloudflare Tunnel** terminates TLS and routes `demos.corynorris.me` to Caddy
+- **Caddy** reverse-proxies HTTP by path to each app container
+- **PostgreSQL** is shared (init script creates `spaced_repetition` and `video_api` DBs)
+- **MongoDB** for url-shortener only
 
-- Docker + Docker Compose
-- pnpm (for local development)
-- Dokploy (for deployment)
+## Quick Start
 
-## Quick Start (Local)
+### Local dev
 
 ```bash
-# Clone with submodules
 git clone --recurse-submodules https://github.com/corynorris/demos.git
 cd demos
 
-# Copy env file
+# Generate env
 cp .env.example .env
-# Edit .env and set VIDEO_SECRET_KEY_BASE / VIDEO_SECRET_KEY
+# EDIT .env — set POSTGRES_PASSWORD, VIDEO_SECRET_KEY_BASE, VIDEO_SECRET_KEY
 
-# Build and start all services
 docker compose up -d --build
-
 # Open http://localhost
+```
+
+### Production deploy on Dokploy
+
+```bash
+# 1. Generate production .env
+./scripts/gen-prod-env.sh
+
+# 2. Paste output into Dokploy → Project → Environment variables
+
+# 3. Set up Cloudflare Tunnel (one-time)
+#    In Cloudflare Zero Trust dashboard:
+#      Public Hostname: demos.corynorris.me
+#      Service:        http://caddy:80
+#    Make sure the tunnel connector can reach Caddy on dokploy-network.
+
+# 4. Deploy — git push to main, Dokploy auto-redeploys
 ```
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
+| Variable | Required | Auto? | Description |
 |---|---|---|---|
-| `DB_PASSWORD` | No | `demos` | PostgreSQL password |
-| `VIDEO_SECRET_KEY_BASE` | Yes | — | Phoenix secret key base (64+ bytes) |
-| `VIDEO_SECRET_KEY` | Yes | — | Guardian JWT secret key |
-| `BASE_URL` | No | Auto | URL shortener base URL |
+| `POSTGRES_USER` | No | — | `demos` |
+| `POSTGRES_PASSWORD` | **Yes** | gen-prod-env | Shared PG password. Do NOT change after first deploy. |
+| `BASE_URL` | No | — | URL shortener base URL |
+| `DATABASE_URL` | No | — | SRS Rust API PG connection |
+| `VIDEO_SECRET_KEY_BASE` | **Yes** | gen-prod-env | Phoenix secret (64 hex bytes) |
+| `VIDEO_SECRET_KEY` | **Yes** | gen-prod-env | Guardian JWT secret (32 hex bytes) |
+| `DOMAIN` | No | — | Public domain |
 
-Generate secrets for video-api:
-```bash
-cd apps/video-api
-mix phx.gen.secret
-```
-
-## Deploying to Dokploy
-
-1. Add this repository to Dokploy as a new project
-2. Set the Docker Compose path to `docker-compose.yml`
-3. Configure the environment variables from `.env.example`
-4. Set the domain to `demos.corynorris.me`
-5. Deploy
-
-Dokploy will automatically provision SSL certificates via Caddy.
+Run `./scripts/gen-prod-env.sh` to generate all secrets automatically.
 
 ## Updating Submodules
 
@@ -89,44 +95,20 @@ Dokploy will automatically provision SSL certificates via Caddy.
 # Update all submodules to latest main
 git submodule update --remote
 
-# Update a specific submodule
-cd apps/roguelike
-git pull origin main
-cd ../..
+# Or update a specific one
+cd apps/roguelike && git pull origin main && cd ../..
 git add apps/roguelike
-git commit -m "chore: update roguelike submodule"
+git commit -m "chore: update roguelike"
 
-# Push changes
-git push origin main
+git push origin main  # Dokploy redeploys
 ```
 
 ## Development
 
-Each app can be developed independently in its own repo. After merging changes
-to the app's `main` branch, update the submodule pointer in this repo.
+Each app is a git submodule. Develop in its own repo, merge to `main`, then
+update the submodule pointer here.
 
 ```bash
-# Develop locally
 cd apps/voting-app-react
-pnpm install
-pnpm dev  # starts Vite + Express
-```
-
-## Updating Dependencies
-
-```bash
-# In each submodule
-cd apps/<app>
-pnpm update
-pnpm run build
-pnpm run lint
-pnpm run format
-
-# For Rust
-cd apps/spaced-repitition/api
-cargo update
-
-# For Elixir
-cd apps/video-api
-mix deps.update --all
+pnpm install && pnpm dev
 ```

@@ -1,12 +1,23 @@
+# demos.corynorris.me — deployed by Dokploy (git push → redeploy).
+#
+# Cloudflare Tunnel handles TLS termination → Caddy is HTTP-only on :80.
+# All service-to-service traffic runs on the private `internal` network.
+# Caddy joins the shared `dokploy-network` so Traefik/Cloudflare can reach it.
+#
+# Naming rule: services unique on dokploy-network are safe. Internal-only
+# services use generic names (db, mongo) inside the private network.
+
 services:
-  # ─── Static SPAs ───────────────────────────────────────
+  # ══════════════════════════════════════════════════════════
+  # Static SPAs (Vite → nginx)
+  # ══════════════════════════════════════════════════════════
   roguelike:
     build:
       context: ./apps/roguelike
       dockerfile: ../../docker/Dockerfile.static
     restart: unless-stopped
     networks:
-      - demos
+      - internal
 
   life:
     build:
@@ -14,7 +25,7 @@ services:
       dockerfile: ../../docker/Dockerfile.static
     restart: unless-stopped
     networks:
-      - demos
+      - internal
 
   recipebox:
     build:
@@ -22,16 +33,18 @@ services:
       dockerfile: ../../docker/Dockerfile.static
     restart: unless-stopped
     networks:
-      - demos
+      - internal
 
-  # ─── Node.js apps ─────────────────────────────────────
+  # ══════════════════════════════════════════════════════════
+  # Node.js apps (Express + Socket.IO + React)
+  # ══════════════════════════════════════════════════════════
   voting:
     build:
       context: ./apps/voting-app-react
       dockerfile: ../../docker/Dockerfile.voting
     restart: unless-stopped
     networks:
-      - demos
+      - internal
 
   chat:
     build:
@@ -39,7 +52,7 @@ services:
       dockerfile: ../../docker/Dockerfile.chat
     restart: unless-stopped
     networks:
-      - demos
+      - internal
 
   comments:
     build:
@@ -49,7 +62,7 @@ services:
     volumes:
       - comment_data:/app/data
     networks:
-      - demos
+      - internal
 
   shortener:
     build:
@@ -58,28 +71,27 @@ services:
     restart: unless-stopped
     environment:
       - MONGODB_URI=mongodb://mongo:27017/url-shortener
-      - BASE_URL=https://demos.corynorris.me/s
-    depends_on:
-      mongo:
-        condition: service_healthy
+      - BASE_URL=${BASE_URL:-https://demos.corynorris.me/s}
     networks:
-      - demos
+      - internal
 
-  # ─── Spaced repetition (Rust API + React frontend) ───
+  # ══════════════════════════════════════════════════════════
+  # Spaced Repetition (Rust API + React frontend)
+  # ══════════════════════════════════════════════════════════
   srs-api:
     build:
       context: ./apps/spaced-repitition
       dockerfile: ../../docker/Dockerfile.srs
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgres://demos:demos@postgres:5432/spaced_repetition
-      - ADDRESS=0.0.0.0
-      - PORT=5000
+      DATABASE_URL: ${DATABASE_URL:-postgres://demos:demos@db:5432/spaced_repetition}
+      ADDRESS: "0.0.0.0"
+      PORT: "5000"
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
     networks:
-      - demos
+      - internal
 
   srs-web:
     build:
@@ -87,16 +99,18 @@ services:
       dockerfile: ../../docker/Dockerfile.srs-web
     restart: unless-stopped
     networks:
-      - demos
+      - internal
 
-  # ─── Elixir/Phoenix ───────────────────────────────────
+  # ══════════════════════════════════════════════════════════
+  # Video API (Elixir/Phoenix)
+  # ══════════════════════════════════════════════════════════
   video:
     build:
       context: ./apps/video-api
       dockerfile: ../../docker/Dockerfile.video
     restart: unless-stopped
     environment:
-      - DATABASE_URL=ecto://demos:demos@postgres:5432/video_api
+      - DATABASE_URL=ecto://demos:${POSTGRES_PASSWORD:-demos}@db:5432/video_api
       - SECRET_KEY_BASE=${VIDEO_SECRET_KEY_BASE:-CHANGE_ME_64_bytes_minimum}
       - SECRET_KEY=${VIDEO_SECRET_KEY:-CHANGE_ME}
       - UPLOADS_DIR=/app/uploads
@@ -104,31 +118,34 @@ services:
       - MIX_ENV=prod
       - PORT=4000
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
     volumes:
       - video_uploads:/app/uploads
       - video_transcodes:/app/transcodes
     networks:
-      - demos
+      - internal
 
-  # ─── Databases ────────────────────────────────────────
-  postgres:
+  # ══════════════════════════════════════════════════════════
+  # Databases
+  # ══════════════════════════════════════════════════════════
+  db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: demos
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-demos}
+      POSTGRES_USER: ${POSTGRES_USER:-demos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./scripts/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U demos"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-demos}"]
       interval: 5s
       timeout: 3s
       retries: 5
     networks:
-      - demos
+      - internal
 
   mongo:
     image: mongo:7
@@ -141,20 +158,22 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - demos
+      - internal
 
-  # ─── Reverse proxy ────────────────────────────────────
+  # ══════════════════════════════════════════════════════════
+  # Reverse proxy (HTTP only — Cloudflare Tunnel handles TLS)
+  # ══════════════════════════════════════════════════════════
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
     networks:
-      - demos
+      - internal
+      - dokploy-network
 
 volumes:
   postgres_data:
@@ -165,4 +184,6 @@ volumes:
   video_transcodes:
 
 networks:
-  demos:
+  internal:
+  dokploy-network:
+    external: true

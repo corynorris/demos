@@ -1,4 +1,3 @@
-# Builds socket-io-chat-app with path-prefix support
 ARG VITE_BASE=/
 ARG SOCKETIO_PATH
 
@@ -6,13 +5,11 @@ FROM node:22-alpine AS builder
 ARG VITE_BASE
 ARG SOCKETIO_PATH
 WORKDIR /app
-RUN npm install -g pnpm@9
 COPY pnpm-lock.yaml package.json ./
-RUN pnpm install --frozen-lockfile
+RUN corepack enable && \
+    pnpm install --no-frozen-lockfile --ignore-scripts && pnpm rebuild @swc/core esbuild
 COPY . .
-# Remove stale pnpm-workspace.yaml (pnpm 11 auto-generates it, breaks pnpm 9)
 RUN rm -f pnpm-workspace.yaml
-
 RUN if [ -n "${VITE_BASE}" ] && [ -f vite.config.ts ]; then \
       if grep -q 'base:' vite.config.ts; then \
         sed -i "s|base: *['\"][^'\"]*['\"]|base: '${VITE_BASE}'|" vite.config.ts; \
@@ -20,27 +17,20 @@ RUN if [ -n "${VITE_BASE}" ] && [ -f vite.config.ts ]; then \
         sed -i "s|defineConfig({|defineConfig({ base: '${VITE_BASE}',|" vite.config.ts; \
       fi; \
     fi
-
-# Inject Socket.IO path into client (io() → io({ path: '...' }))
 RUN if [ -n "${SOCKETIO_PATH}" ] && [ -f src/socket.ts ]; then \
       sed -i "s|const socket: Socket = io();|const socket: Socket = io({ path: '${SOCKETIO_PATH}' });|" src/socket.ts; \
     fi
-
 RUN pnpm run build
 
 FROM node:22-alpine
 ARG SOCKETIO_PATH
 WORKDIR /app
-RUN npm install -g pnpm@9
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod
+RUN corepack enable && pnpm install --no-frozen-lockfile --ignore-scripts && pnpm rebuild @swc/core esbuild --prod
 COPY --from=builder /app/dist ./dist
-
-# Inject Socket.IO path into server
 RUN if [ -n "${SOCKETIO_PATH}" ] && [ -f dist/server/index.js ]; then \
       sed -i "s|new Server(http);|new Server(http, { path: '${SOCKETIO_PATH}' });|" dist/server/index.js; \
     fi
-
 EXPOSE 3000
 ENV PORT=3000
 CMD ["node", "dist/server/index.js"]

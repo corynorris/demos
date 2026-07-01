@@ -1,4 +1,3 @@
-# Builds voting-app-react with path-prefix support
 ARG VITE_BASE=/
 ARG SOCKETIO_PATH
 
@@ -6,14 +5,11 @@ FROM node:22-alpine AS builder
 ARG VITE_BASE
 ARG SOCKETIO_PATH
 WORKDIR /app
-RUN npm install -g pnpm@9
 COPY pnpm-lock.yaml package.json ./
-RUN pnpm install --frozen-lockfile
+RUN corepack enable && \
+    pnpm install --no-frozen-lockfile --ignore-scripts && pnpm rebuild @swc/core esbuild
 COPY . .
-# Remove stale pnpm-workspace.yaml (pnpm 11 auto-generates it, breaks pnpm 9)
 RUN rm -f pnpm-workspace.yaml
-
-# Inject base path into vite config
 RUN if [ -n "${VITE_BASE}" ] && [ -f vite.config.ts ]; then \
       if grep -q 'base:' vite.config.ts; then \
         sed -i "s|base: *['\"][^'\"]*['\"]|base: '${VITE_BASE}'|" vite.config.ts; \
@@ -21,28 +17,21 @@ RUN if [ -n "${VITE_BASE}" ] && [ -f vite.config.ts ]; then \
         sed -i "s|defineConfig({|defineConfig({ base: '${VITE_BASE}',|" vite.config.ts; \
       fi; \
     fi
-
-# Inject Socket.IO path into client
 RUN if [ -n "${SOCKETIO_PATH}" ] && [ -f src/socket.ts ]; then \
       sed -i "s|io(SOCKET_URL, {|io(SOCKET_URL, { path: '${SOCKETIO_PATH}',|" src/socket.ts; \
     fi
-
 RUN pnpm run build
 
 FROM node:22-alpine
 ARG SOCKETIO_PATH
 WORKDIR /app
-RUN npm install -g pnpm@9
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod
+RUN corepack enable && pnpm install --no-frozen-lockfile --ignore-scripts && pnpm rebuild @swc/core esbuild --prod
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/dist-server ./dist-server
-
-# Inject Socket.IO path into server
 RUN if [ -n "${SOCKETIO_PATH}" ] && [ -f dist-server/server/index.js ]; then \
       sed -i "s|new Server(httpServer, {|new Server(httpServer, { path: '${SOCKETIO_PATH}',|" dist-server/server/index.js; \
     fi
-
 EXPOSE 8090
 ENV PORT=8090
 CMD ["node", "dist-server/server/index.js"]

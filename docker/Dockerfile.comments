@@ -3,13 +3,11 @@ ARG VITE_BASE=/
 FROM node:22-alpine AS builder
 ARG VITE_BASE
 WORKDIR /app
-RUN npm install -g pnpm@9
 COPY pnpm-lock.yaml package.json ./
-RUN pnpm install --frozen-lockfile
+RUN corepack enable && \
+    pnpm install --no-frozen-lockfile --ignore-scripts && pnpm rebuild @swc/core esbuild
 COPY . .
-# Remove stale pnpm-workspace.yaml (pnpm 11 auto-generates it, breaks pnpm 9)
 RUN rm -f pnpm-workspace.yaml
-
 RUN if [ -n "${VITE_BASE}" ] && [ -f vite.config.ts ]; then \
       if grep -q 'base:' vite.config.ts; then \
         sed -i "s|base: *['\"][^'\"]*['\"]|base: '${VITE_BASE}'|" vite.config.ts; \
@@ -17,14 +15,12 @@ RUN if [ -n "${VITE_BASE}" ] && [ -f vite.config.ts ]; then \
         sed -i "s|defineConfig({|defineConfig({ base: '${VITE_BASE}',|" vite.config.ts; \
       fi; \
     fi
-
 RUN pnpm run build
 
 FROM node:22-alpine
 WORKDIR /app
-RUN npm install -g pnpm@9
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod
+RUN corepack enable && pnpm install --no-frozen-lockfile --ignore-scripts && pnpm rebuild @swc/core esbuild --prod
 COPY --from=builder /app/dist ./dist
 RUN mkdir -p /app/data
 VOLUME /app/data

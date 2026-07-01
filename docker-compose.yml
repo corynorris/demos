@@ -1,0 +1,168 @@
+services:
+  # ─── Static SPAs ───────────────────────────────────────
+  roguelike:
+    build:
+      context: ./apps/roguelike
+      dockerfile: ../../docker/Dockerfile.static
+    restart: unless-stopped
+    networks:
+      - demos
+
+  life:
+    build:
+      context: ./apps/life
+      dockerfile: ../../docker/Dockerfile.static
+    restart: unless-stopped
+    networks:
+      - demos
+
+  recipebox:
+    build:
+      context: ./apps/recipebox
+      dockerfile: ../../docker/Dockerfile.static
+    restart: unless-stopped
+    networks:
+      - demos
+
+  # ─── Node.js apps ─────────────────────────────────────
+  voting:
+    build:
+      context: ./apps/voting-app-react
+      dockerfile: ../../docker/Dockerfile.voting
+    restart: unless-stopped
+    networks:
+      - demos
+
+  chat:
+    build:
+      context: ./apps/socket-io-chat-app
+      dockerfile: ../../docker/Dockerfile.chat
+    restart: unless-stopped
+    networks:
+      - demos
+
+  comments:
+    build:
+      context: ./apps/react-comment-box
+      dockerfile: ../../docker/Dockerfile.comments
+    restart: unless-stopped
+    volumes:
+      - comment_data:/app/data
+    networks:
+      - demos
+
+  shortener:
+    build:
+      context: ./apps/url-shortener
+      dockerfile: ../../docker/Dockerfile.shortener
+    restart: unless-stopped
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/url-shortener
+      - BASE_URL=https://demos.corynorris.me/s
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - demos
+
+  # ─── Spaced repetition (Rust API + React frontend) ───
+  srs-api:
+    build:
+      context: ./apps/spaced-repitition
+      dockerfile: ../../docker/Dockerfile.srs
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgres://demos:demos@postgres:5432/spaced_repetition
+      - ADDRESS=0.0.0.0
+      - PORT=5000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - demos
+
+  srs-web:
+    build:
+      context: ./apps/spaced-repitition
+      dockerfile: ../../docker/Dockerfile.srs-web
+    restart: unless-stopped
+    networks:
+      - demos
+
+  # ─── Elixir/Phoenix ───────────────────────────────────
+  video:
+    build:
+      context: ./apps/video-api
+      dockerfile: ../../docker/Dockerfile.video
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=ecto://demos:demos@postgres:5432/video_api
+      - SECRET_KEY_BASE=${VIDEO_SECRET_KEY_BASE:-CHANGE_ME_64_bytes_minimum}
+      - SECRET_KEY=${VIDEO_SECRET_KEY:-CHANGE_ME}
+      - UPLOADS_DIR=/app/uploads
+      - TRANSCODES_DIR=/app/transcodes
+      - MIX_ENV=prod
+      - PORT=4000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - video_uploads:/app/uploads
+      - video_transcodes:/app/transcodes
+    networks:
+      - demos
+
+  # ─── Databases ────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: demos
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-demos}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demos"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - demos
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - demos
+
+  # ─── Reverse proxy ────────────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    networks:
+      - demos
+
+volumes:
+  postgres_data:
+  mongo_data:
+  caddy_data:
+  comment_data:
+  video_uploads:
+  video_transcodes:
+
+networks:
+  demos:

@@ -1,0 +1,21 @@
+# Single-stage Node.js production runtime for voting-app-react
+# Build happens via docker/Dockerfile.node-builder, or inline
+
+FROM node:22-alpine AS builder
+WORKDIR /app
+RUN corepack enable
+COPY pnpm-lock.yaml package.json ./
+RUN pnpm install --frozen-lockfile
+COPY . .
+RUN pnpm run build
+
+FROM node:22-alpine
+WORKDIR /app
+RUN corepack enable
+COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --prod
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/dist-server ./dist-server
+EXPOSE 8090
+ENV PORT=8090
+CMD ["node", "dist-server/server/index.js"]

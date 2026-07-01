@@ -1,0 +1,52 @@
+demos.corynorris.me {
+    # Static SPAs (client-side routing handled by nginx try_files)
+    handle_path /roguelike* {
+        reverse_proxy roguelike:80
+    }
+
+    handle_path /life* {
+        reverse_proxy life:80
+    }
+
+    handle_path /recipebox* {
+        reverse_proxy recipebox:80
+    }
+
+    # Node.js apps (Express servers with Socket.IO)
+    handle_path /voting* {
+        reverse_proxy voting:8090
+    }
+
+    handle_path /chat* {
+        reverse_proxy chat:3000
+    }
+
+    handle_path /comments* {
+        reverse_proxy comments:3001
+    }
+
+    # URL shortener (Express)
+    handle_path /s* {
+        reverse_proxy shortener:3002
+    }
+
+    # Spaced repetition (nginx serves frontend + proxies /api/* to Rust)
+    handle_path /srs* {
+        reverse_proxy srs-web:80
+    }
+
+    # Video API (Elixir/Phoenix)
+    handle_path /video* {
+        reverse_proxy video:4000
+    }
+
+    # Landing page
+    handle {
+        respond "Demos — corynorris.me" 200
+    }
+
+    # Logging
+    log {
+        output stdout
+    }
+}

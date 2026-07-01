@@ -1,0 +1,28 @@
+FROM elixir:1.7-alpine AS builder
+RUN mix local.hex --force && mix local.rebar --force
+WORKDIR /app
+COPY mix.exs mix.lock ./
+RUN mix deps.get --only prod
+COPY config/ config/
+COPY lib/ lib/
+COPY priv/ priv/
+RUN mix compile
+
+# Build frontend assets
+FROM node:22-alpine AS assets-builder
+WORKDIR /app
+RUN corepack enable
+COPY assets/pnpm-lock.yaml assets/package.json ./
+RUN pnpm install --frozen-lockfile
+COPY assets/ ./
+RUN pnpm run deploy
+
+FROM elixir:1.7-alpine
+WORKDIR /app
+COPY --from=builder /app /app
+COPY --from=builder /root/.mix /root/.mix
+COPY --from=assets-builder /app/../priv/static /app/priv/static
+EXPOSE 4000
+ENV MIX_ENV=prod
+ENV PORT=4000
+CMD ["mix", "phx.server"]

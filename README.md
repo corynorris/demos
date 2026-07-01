@@ -39,7 +39,7 @@ demos.corynorris.me
     └───────────────────────────────┘
 ```
 
-- **Dokploy** provides Traefik ingress and hostname routing
+- **Dokploy** provides Traefik ingress and hostname routing. Enable "Clone submodules" in project settings.
 - **nginx** handles path-based routing (`/roguelike`, `/chat`, etc.) by stripping prefixes
 - **Socket.IO** apps use namespaced paths (`/voting/socket.io`, `/chat/socket.io`) via build args
 - **PostgreSQL** is shared; `scripts/init-multi-db.sh` creates app DBs on first boot
@@ -58,7 +58,7 @@ demos.corynorris.me
 - Repository: `corynorris/demos`
 - Branch: `main`
 - Compose path: `docker-compose.yml`
-- Pre-deploy command: `./scripts/setup.sh`
+- **Enable "Clone submodules"** checkbox
 
 ### 3. Set environment variables
 
@@ -87,10 +87,9 @@ In Dokploy → Project → Domains, add `demos.corynorris.me` pointing to the `n
 ## Local Development
 
 ```bash
-# Clone and set up apps
-git clone https://github.com/corynorris/demos.git
+# Clone with submodules
+git clone --recurse-submodules https://github.com/corynorris/demos.git
 cd demos
-./scripts/setup.sh
 
 # Generate env
 cp .env.example .env
@@ -103,22 +102,23 @@ docker compose up -d --build
 
 ## Updating Apps
 
-Each app is cloned from its own GitHub repo by `scripts/setup.sh`. To update:
+Each app is a git submodule pinned to a specific commit. To update:
 
 ```bash
-# Pull latest of all apps
-./scripts/setup.sh
+# Update all submodules to latest main
+git submodule update --remote
 
-# Or update a single app
-cd apps/roguelike && git pull origin main
+# Or update a single one
+cd apps/roguelike && git pull origin main && cd ../..
+git add apps/roguelike
+git commit -m "chore: update roguelike"
+
+git push  # Dokploy redeploys
 ```
-
-After updating app code, commit and push. Dokploy redeploys automatically.
 
 ## Scripts
 
 | Script | Purpose |
 |---|---|
-| `scripts/setup.sh` | Clones/updates all app repos into `apps/` (Dokploy pre-deploy) |
 | `scripts/gen-prod-env.sh` | Interactive `.env.prod` generator with auto-generated secrets |
 | `scripts/init-multi-db.sh` | Creates `spaced_repetition` + `video_api` databases on first PG boot |

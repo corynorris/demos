@@ -130,31 +130,6 @@ services:
       - internal
 
   # ══════════════════════════════════════════════════════════
-  # Video API (Elixir/Phoenix)
-  # ══════════════════════════════════════════════════════════
-  video:
-    build:
-      context: ./apps/video-api
-      dockerfile: ../../docker/Dockerfile.video
-    restart: unless-stopped
-    environment:
-      - DATABASE_URL=ecto://demos:${POSTGRES_PASSWORD:-demos}@db:5432/video_api
-      - SECRET_KEY_BASE=${VIDEO_SECRET_KEY_BASE:-CHANGE_ME_64_bytes_minimum}
-      - SECRET_KEY=${VIDEO_SECRET_KEY:-CHANGE_ME}
-      - UPLOADS_DIR=/app/uploads
-      - TRANSCODES_DIR=/app/transcodes
-      - MIX_ENV=prod
-      - PORT=4000
-    depends_on:
-      db:
-        condition: service_healthy
-    volumes:
-      - video_uploads:/app/uploads
-      - video_transcodes:/app/transcodes
-    networks:
-      - internal
-
-  # ══════════════════════════════════════════════════════════
   # Databases
   # ══════════════════════════════════════════════════════════
   db:
@@ -192,8 +167,6 @@ volumes:
   postgres_data:
   mongo_data:
   comment_data:
-  video_uploads:
-  video_transcodes:
 
 networks:
   internal:

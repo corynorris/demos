@@ -13,8 +13,8 @@ Umbrella repository for all demo apps, deployed via **Dokploy** to `demos.coryno
 | trello | `/trello` | Elixir/Phoenix + Preact | PostgreSQL |
 | voting-app-react | `/voting` | React + Express + Socket.IO | — |
 | socket-io-chat-app | `/chat` | React + Express + Socket.IO | — |
-| react-comment-box | `/comments` | React + Express | SQLite |
-| url-shortener | `/s` | Express + TypeScript | MongoDB |
+| react-comment-box | `/comments` | React + Express | PostgreSQL |
+| url-shortener | `/s` | Express + TypeScript | PostgreSQL |
 | spaced-repitition | `/srs` | Rust/Axum + React | PostgreSQL |
 | video-api | `/video` | Elixir/Phoenix | PostgreSQL |
 
@@ -34,12 +34,11 @@ demos.corynorris.me
     ┌────┼──────────────────────────┐
     │ roguelike  life  recipebox     │  Static SPAs (nginx)
     │ tilemap                        │  Static SPA (nginx)
-    │ voting  chat  comments         │  Express + Socket.IO
-    │ shortener                      │  Express + MongoDB
-    │ srs-api  srs-web              │  Rust API + React
-    │ trello                         │  Elixir/Phoenix + Preact
-    │ db (postgres)  mongo          │  Databases
-    └───────────────────────────────┘
+    │ voting  chat                   │  Express + Socket.IO
+    │ shortener  comments  trello     │  Express / Phoenix + PostgreSQL
+    │ srs                             │  SvelteKit + PostgreSQL
+    │ db (postgres)                   │  Shared database
+    └────────────────────────────────┘
 ```
 
 - **Dokploy** provides Traefik ingress and hostname routing. Enable "Clone submodules" in project settings.
@@ -82,7 +81,9 @@ In Dokploy → Project → Domains, add `demos.corynorris.me` pointing to the `n
 | `POSTGRES_USER` | No | — | Default: `demos` |
 | `POSTGRES_PASSWORD` | **Yes** | gen-prod-env | Shared PG password. Do NOT change after first deploy. |
 | `BASE_URL` | No | — | URL shortener base URL |
-| `DATABASE_URL` | No | gen-prod-env | SRS Rust API PG connection string |
+| `DATABASE_URL` | No | gen-prod-env | SRS PG connection string |
+| `SHORTENER_DATABASE_URL` | No | gen-prod-env | URL shortener PG connection string |
+| `COMMENTS_DATABASE_URL` | No | gen-prod-env | Comment box PG connection string |
 | `VIDEO_SECRET_KEY_BASE` | **Yes** | gen-prod-env | Phoenix secret (64 hex bytes) |
 | `VIDEO_SECRET_KEY` | **Yes** | gen-prod-env | Guardian JWT secret (32 hex bytes) |
 | `TRELLO_SECRET_KEY_BASE` | **Yes** | gen-prod-env | Phoenix secret (64 hex bytes) |

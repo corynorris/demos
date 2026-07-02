@@ -100,6 +100,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     networks:
       - internal
 
@@ -114,6 +116,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     networks:
       - internal
 
@@ -135,6 +139,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     networks:
       - internal
 
@@ -162,6 +168,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     networks:
       - internal
 
@@ -183,6 +191,26 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - internal
+
+  # One-shot: idempotently ensures all shared databases exist on EVERY deploy.
+  # The first-boot init hook only runs on an empty volume, so this is what
+  # provisions databases added after the volume was first created.
+  db-init:
+    image: postgres:16-alpine
+    restart: "no"
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:-demos}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: postgres
+    entrypoint: ["sh", "/init-multi-db.sh"]
+    volumes:
+      - ./scripts/init-multi-db.sh:/init-multi-db.sh:ro
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - internal
 

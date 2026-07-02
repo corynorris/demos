@@ -9,6 +9,8 @@ Umbrella repository for all demo apps, deployed via **Dokploy** to `demos.coryno
 | roguelike | `/roguelike` | React + Vite (static) | — |
 | life | `/life` | React + Vite (static) | — |
 | recipebox | `/recipebox` | React + Vite (static) | — |
+| tilemap | `/tilemap` | React + Vite (static) | — |
+| trello | `/trello` | Elixir/Phoenix + Preact | PostgreSQL |
 | voting-app-react | `/voting` | React + Express + Socket.IO | — |
 | socket-io-chat-app | `/chat` | React + Express + Socket.IO | — |
 | react-comment-box | `/comments` | React + Express | SQLite |
@@ -31,10 +33,11 @@ demos.corynorris.me
          │  internal network
     ┌────┼──────────────────────────┐
     │ roguelike  life  recipebox     │  Static SPAs (nginx)
+    │ tilemap                        │  Static SPA (nginx)
     │ voting  chat  comments         │  Express + Socket.IO
     │ shortener                      │  Express + MongoDB
     │ srs-api  srs-web              │  Rust API + React
-    │ video                         │  Elixir/Phoenix
+    │ trello                         │  Elixir/Phoenix + Preact
     │ db (postgres)  mongo          │  Databases
     └───────────────────────────────┘
 ```
@@ -82,6 +85,9 @@ In Dokploy → Project → Domains, add `demos.corynorris.me` pointing to the `n
 | `DATABASE_URL` | No | gen-prod-env | SRS Rust API PG connection string |
 | `VIDEO_SECRET_KEY_BASE` | **Yes** | gen-prod-env | Phoenix secret (64 hex bytes) |
 | `VIDEO_SECRET_KEY` | **Yes** | gen-prod-env | Guardian JWT secret (32 hex bytes) |
+| `TRELLO_SECRET_KEY_BASE` | **Yes** | gen-prod-env | Phoenix secret (64 hex bytes) |
+| `TRELLO_SECRET_KEY` | **Yes** | gen-prod-env | Guardian JWT secret (32 hex bytes) |
+| `TRELLO_DATABASE_URL` | No | gen-prod-env | Trello PG connection string |
 | `DOMAIN` | No | — | Public domain |
 
 ## Local Development

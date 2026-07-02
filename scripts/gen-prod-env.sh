@@ -47,6 +47,8 @@ DOMAIN=$(ask "Domain" "demos.corynorris.me")
 SHORTENER_URL=$(ask "URL shortener base URL" "https://${DOMAIN}/s")
 VIDEO_KEY_BASE=$(gen 64)
 VIDEO_SECRET=$(gen 32)
+TRELLO_KEY_BASE=$(gen 64)
+TRELLO_SECRET=$(gen 32)
 HMAC_KEY=$(gen 32)
 
 cat > "$OUT" <<EOF
@@ -54,7 +56,7 @@ cat > "$OUT" <<EOF
 # Paste into Dokploy. Only DB_PASSWORD must keep its value across redeploys.
 
 # ===================
-# PostgreSQL (shared) — databases: spaced_repetition, video_api
+# PostgreSQL (shared) — databases: spaced_repetition, video_api, trello
 # do NOT change after first successful deploy
 # ===================
 POSTGRES_USER=demos
@@ -76,6 +78,13 @@ DATABASE_URL=postgres://demos:\${POSTGRES_PASSWORD}@db:5432/spaced_repetition
 # ===================
 VIDEO_SECRET_KEY_BASE=${VIDEO_KEY_BASE}
 VIDEO_SECRET_KEY=${VIDEO_SECRET}
+
+# ===================
+# Trello (Elixir/Phoenix kanban)
+# ===================
+TRELLO_SECRET_KEY_BASE=${TRELLO_KEY_BASE}
+TRELLO_SECRET_KEY=${TRELLO_SECRET}
+TRELLO_DATABASE_URL=ecto://demos:\${POSTGRES_PASSWORD}@db:5432/trello
 
 # ===================
 # Public domain

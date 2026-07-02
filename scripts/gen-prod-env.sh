@@ -56,16 +56,22 @@ cat > "$OUT" <<EOF
 # Paste into Dokploy. Only DB_PASSWORD must keep its value across redeploys.
 
 # ===================
-# PostgreSQL (shared) — databases: spaced_repetition, video_api, trello
+# PostgreSQL (shared) — databases: spaced_repetition, video_api, trello, url_shortener, comments
 # do NOT change after first successful deploy
 # ===================
 POSTGRES_USER=demos
 POSTGRES_PASSWORD=$(gen 24)
 
 # ===================
-# URL Shortener
+# URL Shortener (Express + PostgreSQL)
 # ===================
 BASE_URL=${SHORTENER_URL}
+SHORTENER_DATABASE_URL=postgres://demos:\${POSTGRES_PASSWORD}@db:5432/url_shortener
+
+# ===================
+# Comment Box (Express + PostgreSQL)
+# ===================
+COMMENTS_DATABASE_URL=postgres://demos:\${POSTGRES_PASSWORD}@db:5432/comments
 
 # ===================
 # Spaced Repetition (Rust/Axum)

@@ -95,8 +95,11 @@ services:
       args:
         VITE_BASE: /comments/
     restart: unless-stopped
-    volumes:
-      - comment_data:/app/data
+    environment:
+      DATABASE_URL: ${COMMENTS_DATABASE_URL:-postgres://demos:demos@db:5432/comments}
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - internal
 
@@ -106,8 +109,11 @@ services:
       dockerfile: ../../docker/Dockerfile.shortener
     restart: unless-stopped
     environment:
-      - MONGODB_URI=mongodb://mongo:27017/url-shortener
-      - BASE_URL=${BASE_URL:-https://demos.corynorris.me/s}
+      DATABASE_URL: ${SHORTENER_DATABASE_URL:-postgres://demos:demos@db:5432/url_shortener}
+      BASE_URL: ${BASE_URL:-https://demos.corynorris.me/s}
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - internal
 
@@ -173,23 +179,8 @@ services:
     networks:
       - internal
 
-  mongo:
-    image: mongo:7
-    restart: unless-stopped
-    volumes:
-      - mongo_data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    networks:
-      - internal
-
 volumes:
   postgres_data:
-  mongo_data:
-  comment_data:
 
 networks:
   internal:

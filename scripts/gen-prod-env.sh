@@ -49,15 +49,21 @@ VIDEO_KEY_BASE=$(gen 64)
 VIDEO_SECRET=$(gen 32)
 TRELLO_KEY_BASE=$(gen 64)
 TRELLO_SECRET=$(gen 32)
-HMAC_KEY=$(gen 32)
+BETTER_AUTH_SECRET=$(gen 32)
 
 cat > "$OUT" <<EOF
 # demos.corynorris.me production env — generated $(date -u +%FT%TZ)
-# Paste into Dokploy. Only DB_PASSWORD must keep its value across redeploys.
+# Paste into Dokploy. Only POSTGRES_PASSWORD must keep its value across redeploys.
+#
+# Every app that uses the shared Postgres derives its connection string from
+# POSTGRES_USER/POSTGRES_PASSWORD inside docker-compose.yml — there are no
+# per-app DATABASE_URL vars to keep in sync. Change the password here and every
+# app follows automatically.
 
 # ===================
-# PostgreSQL (shared) — databases: spaced_repetition, video_api, trello, url_shortener, comments
-# do NOT change after first successful deploy
+# PostgreSQL (shared) — DBs: spaced_repetition, video_api, trello, url_shortener, comments
+# POSTGRES_PASSWORD is baked into the data volume on FIRST boot.
+# do NOT change it after a successful deploy, or the volume will reject it.
 # ===================
 POSTGRES_USER=demos
 POSTGRES_PASSWORD=$(gen 24)
@@ -66,18 +72,12 @@ POSTGRES_PASSWORD=$(gen 24)
 # URL Shortener (Express + PostgreSQL)
 # ===================
 BASE_URL=${SHORTENER_URL}
-SHORTENER_DATABASE_URL=postgres://demos:\${POSTGRES_PASSWORD}@db:5432/url_shortener
 
 # ===================
-# Comment Box (Express + PostgreSQL)
+# Spaced Repetition (SvelteKit + better-auth + PostgreSQL)
 # ===================
-COMMENTS_DATABASE_URL=postgres://demos:\${POSTGRES_PASSWORD}@db:5432/comments
-
-# ===================
-# Spaced Repetition (Rust/Axum)
-# ===================
-HMAC_KEY=${HMAC_KEY}
-DATABASE_URL=postgres://demos:\${POSTGRES_PASSWORD}@db:5432/spaced_repetition
+BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+BETTER_AUTH_URL=https://${DOMAIN}/srs
 
 # ===================
 # Video API (Elixir/Phoenix)
@@ -90,7 +90,6 @@ VIDEO_SECRET_KEY=${VIDEO_SECRET}
 # ===================
 TRELLO_SECRET_KEY_BASE=${TRELLO_KEY_BASE}
 TRELLO_SECRET_KEY=${TRELLO_SECRET}
-TRELLO_DATABASE_URL=ecto://demos:\${POSTGRES_PASSWORD}@db:5432/trello
 
 # ===================
 # Public domain

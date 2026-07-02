@@ -96,7 +96,7 @@ services:
         VITE_BASE: /comments/
     restart: unless-stopped
     environment:
-      DATABASE_URL: ${COMMENTS_DATABASE_URL:-postgres://demos:demos@db:5432/comments}
+      DATABASE_URL: postgres://${POSTGRES_USER:-demos}:${POSTGRES_PASSWORD}@db:5432/comments
     depends_on:
       db:
         condition: service_healthy
@@ -111,7 +111,7 @@ services:
       dockerfile: ../../docker/Dockerfile.shortener
     restart: unless-stopped
     environment:
-      DATABASE_URL: ${SHORTENER_DATABASE_URL:-postgres://demos:demos@db:5432/url_shortener}
+      DATABASE_URL: postgres://${POSTGRES_USER:-demos}:${POSTGRES_PASSWORD}@db:5432/url_shortener
       BASE_URL: ${BASE_URL:-https://demos.corynorris.me/s}
     depends_on:
       db:
@@ -132,7 +132,7 @@ services:
     environment:
       SECRET_KEY_BASE: ${TRELLO_SECRET_KEY_BASE}
       SECRET_KEY: ${TRELLO_SECRET_KEY}
-      DATABASE_URL: ${TRELLO_DATABASE_URL:-ecto://demos:demos@db:5432/trello}
+      DATABASE_URL: ecto://${POSTGRES_USER:-demos}:${POSTGRES_PASSWORD}@db:5432/trello
       PORT: "4000"
       HOST: "0.0.0.0"
       BASE_PATH: "/trello"
@@ -153,7 +153,7 @@ services:
       dockerfile: ../../docker/Dockerfile.srs
     restart: unless-stopped
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgres://demos:demos@db:5432/spaced_repetition}
+      DATABASE_URL: postgres://${POSTGRES_USER:-demos}:${POSTGRES_PASSWORD}@db:5432/spaced_repetition
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-auth-secret-change-me-minimum-32-chars}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-https://demos.corynorris.me/srs}
       BASE_PATH: /srs

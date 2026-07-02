@@ -134,7 +134,9 @@ services:
       SECRET_KEY: ${TRELLO_SECRET_KEY}
       DATABASE_URL: ecto://${POSTGRES_USER:-demos}:${POSTGRES_PASSWORD}@db:5432/trello
       PORT: "4000"
-      HOST: "0.0.0.0"
+      # Public hostname for URL generation + WebSocket origin checking (check_origin).
+      # Must be the real public domain, not the bind address.
+      PHX_HOST: ${DOMAIN:-demos.corynorris.me}
       BASE_PATH: "/trello"
     depends_on:
       db:

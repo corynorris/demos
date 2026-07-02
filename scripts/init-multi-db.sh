@@ -12,6 +12,7 @@ echo "init-multi-db: creating databases..."
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
     CREATE DATABASE spaced_repetition;
     CREATE DATABASE video_api;
+    CREATE DATABASE trello;
 EOSQL
 
-echo "init-multi-db: done (spaced_repetition, video_api)"
+echo "init-multi-db: done (spaced_repetition, video_api, trello)"

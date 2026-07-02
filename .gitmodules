@@ -28,3 +28,6 @@
 [submodule "apps/tilemap"]
 	path = apps/tilemap
 	url = https://github.com/corynorris/tilemap.git
+[submodule "apps/trello"]
+	path = apps/trello
+	url = https://github.com/corynorris/trello.git

@@ -53,6 +53,16 @@ services:
     networks:
       - internal
 
+  tilemap:
+    build:
+      context: ./apps/tilemap
+      dockerfile: ../../docker/Dockerfile.static
+      args:
+        VITE_BASE: /tilemap/
+    restart: unless-stopped
+    networks:
+      - internal
+
   # ══════════════════════════════════════════════════════════
   # Node.js apps (Express + Socket.IO + React)
   # ══════════════════════════════════════════════════════════
@@ -98,6 +108,26 @@ services:
     environment:
       - MONGODB_URI=mongodb://mongo:27017/url-shortener
       - BASE_URL=${BASE_URL:-https://demos.corynorris.me/s}
+    networks:
+      - internal
+
+  # ══════════════════════════════════════════════════════════
+  # Elixir/Phoenix apps
+  # ══════════════════════════════════════════════════════════
+  trello:
+    build:
+      context: ./apps/trello
+      dockerfile: ../../docker/Dockerfile.trello
+    restart: unless-stopped
+    environment:
+      SECRET_KEY_BASE: ${TRELLO_SECRET_KEY_BASE}
+      SECRET_KEY: ${TRELLO_SECRET_KEY}
+      DATABASE_URL: ${TRELLO_DATABASE_URL:-ecto://demos:demos@db:5432/trello}
+      PORT: "4000"
+      HOST: "0.0.0.0"
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - internal
 

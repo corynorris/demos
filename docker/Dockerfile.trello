@@ -5,7 +5,7 @@ FROM hexpm/elixir:1.17.3-erlang-27.1-alpine-3.20.3 AS builder
 
 RUN mix local.hex --force && mix local.rebar --force
 WORKDIR /app
-COPY mix.exs mix.lock ./
+COPY mix.exs ./
 RUN mix deps.get
 COPY config/ config/
 COPY lib/ lib/

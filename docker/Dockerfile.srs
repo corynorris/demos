@@ -3,7 +3,7 @@ WORKDIR /app
 
 COPY package.json ./
 COPY pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN corepack enable && pnpm install --frozen-lockfile
+RUN corepack enable && corepack prepare pnpm@10.15.1 --activate && pnpm install --frozen-lockfile
 
 COPY . .
 ENV BASE_PATH=/srs

@@ -150,6 +150,12 @@ services:
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-auth-secret-change-me-minimum-32-chars}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-https://demos.corynorris.me/srs}
       BASE_PATH: /srs
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://10.88.111.16:8080}
+      LLM_MODEL: ${LLM_MODEL:-qwen3.5-4b}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_TIMEOUT_MS: ${LLM_TIMEOUT_MS:-60000}
+      AI_RATE_LIMIT_PER_USER: ${AI_RATE_LIMIT_PER_USER:-5}
+      AI_RATE_LIMIT_WINDOW_MS: ${AI_RATE_LIMIT_WINDOW_MS:-60000}
       HOST: "0.0.0.0"
       PORT: "3000"
     depends_on:

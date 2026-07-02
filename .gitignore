@@ -4,3 +4,6 @@ dist/
 .vite/
 *.log
 .env.prod
+
+# Biome
+.biome/

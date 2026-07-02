@@ -3,7 +3,7 @@ ARG VITE_BASE=/
 WORKDIR /app
 COPY pnpm-lock.yaml package.json ./
 # pnpm 11 requires build script approvals — auto-approve native modules
-RUN corepack enable && \
+RUN corepack enable && corepack prepare pnpm@10.15.1 --activate && \
     pnpm install --no-frozen-lockfile --ignore-scripts && pnpm rebuild @swc/core esbuild
 COPY . .
 RUN rm -f pnpm-workspace.yaml

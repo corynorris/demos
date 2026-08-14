@@ -7,3 +7,6 @@ dist/
 
 # Biome
 .biome/
+
+# Playwright MCP session artifacts
+.playwright-mcp/

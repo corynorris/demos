@@ -1,11 +1,16 @@
-# demos.corynorris.me — deployed by Dokploy (git push → redeploy).
+# demos.corynorris.me — plain docker compose, deployed by ~/Code/server/up.sh.
 #
-# Dokploy provides Traefik ingress → routes demos.corynorris.me to the nginx
-# router service. nginx strips app-specific URL prefixes and proxies internally.
+# Caddy routes demos.corynorris.me to the nginx router service, which strips
+# app-specific URL prefixes and proxies internally.
 #
-# Network model (following the portfolio-2027 pattern):
-#   - internal: all app services + nginx router (private, service-to-service)
-#   - dokploy-network (external): nginx router only (so Dokploy's Traefik can reach it)
+# Network model:
+#   - internal: intra-stack routing (nginx -> the 10 mini-apps)
+#   - edge (external): the router, plus the four services that need the shared
+#     Postgres. Postgres is no longer part of this stack; it lives in
+#     ~/Code/server/infra/postgres and is reachable on `edge` as `db`.
+#
+# Every service that joins `edge` needs a globally unique DNS alias — `nginx` is
+# far too generic to claim on a network shared with every other stack.
 
 services:
   # ══════════════════════════════════════════════════════════
@@ -17,8 +22,9 @@ services:
       dockerfile: docker/Dockerfile.router
     restart: unless-stopped
     networks:
-      - internal
-      - dokploy-network
+      internal:
+      edge:
+        aliases: [demos-router]
 
   # ══════════════════════════════════════════════════════════
   # Static SPAs (Vite → nginx)
@@ -97,13 +103,11 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-demos}:${POSTGRES_PASSWORD}@db:5432/comments
-    depends_on:
-      db:
-        condition: service_healthy
-      db-init:
-        condition: service_completed_successfully
+    # No depends_on: postgres is a separate compose project now. up.sh brings it
+    # up and waits for it to report healthy before deploying any app.
     networks:
       - internal
+      - edge
 
   shortener:
     build:
@@ -113,13 +117,9 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-demos}:${POSTGRES_PASSWORD}@db:5432/url_shortener
       BASE_URL: ${BASE_URL:-https://demos.corynorris.me/s}
-    depends_on:
-      db:
-        condition: service_healthy
-      db-init:
-        condition: service_completed_successfully
     networks:
       - internal
+      - edge
 
   # ══════════════════════════════════════════════════════════
   # Elixir/Phoenix apps
@@ -138,13 +138,9 @@ services:
       # Must be the real public domain, not the bind address.
       PHX_HOST: ${DOMAIN:-demos.corynorris.me}
       BASE_PATH: "/trello"
-    depends_on:
-      db:
-        condition: service_healthy
-      db-init:
-        condition: service_completed_successfully
     networks:
       - internal
+      - edge
 
   # ══════════════════════════════════════════════════════════
   # Spaced Repetition (SvelteKit)
@@ -159,67 +155,27 @@ services:
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-auth-secret-change-me-minimum-32-chars}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-https://demos.corynorris.me/srs}
       BASE_PATH: /srs
-      LLM_BASE_URL: ${LLM_BASE_URL:-http://10.88.111.16:8080}
-      LLM_MODEL: ${LLM_MODEL:-qwen3.5-4b}
+      # LiteLLM gateway. No /v1 suffix — lib/server/services/llm.ts appends
+      # /v1/chat/completions itself.
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://litellm:4000}
+      LLM_MODEL: ${LLM_MODEL:-deepseek-v4-flash}
       LLM_API_KEY: ${LLM_API_KEY:-}
       LLM_TIMEOUT_MS: ${LLM_TIMEOUT_MS:-60000}
       AI_RATE_LIMIT_PER_USER: ${AI_RATE_LIMIT_PER_USER:-5}
       AI_RATE_LIMIT_WINDOW_MS: ${AI_RATE_LIMIT_WINDOW_MS:-60000}
       HOST: "0.0.0.0"
       PORT: "3000"
-    depends_on:
-      db:
-        condition: service_healthy
-      db-init:
-        condition: service_completed_successfully
     networks:
       - internal
+      - edge
 
-  # ══════════════════════════════════════════════════════════
-  # Databases
-  # ══════════════════════════════════════════════════════════
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-demos}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-demos}"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    networks:
-      - internal
-
-  # One-shot: idempotently ensures all shared databases exist on EVERY deploy.
-  # The first-boot init hook only runs on an empty volume, so this is what
-  # provisions databases added after the volume was first created.
-  db-init:
-    image: postgres:16-alpine
-    restart: "no"
-    environment:
-      PGHOST: db
-      PGUSER: ${POSTGRES_USER:-demos}
-      PGPASSWORD: ${POSTGRES_PASSWORD}
-      PGDATABASE: postgres
-    entrypoint: ["sh", "/init-multi-db.sh"]
-    volumes:
-      - ./scripts/init-multi-db.sh:/init-multi-db.sh:ro
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - internal
-
-volumes:
-  postgres_data:
+# Postgres used to live here (`db` + `db-init`). It now runs once for the whole
+# box at ~/Code/server/infra/postgres, which owns this stack's five databases
+# and the `demos` role. scripts/init-multi-db.sh has been folded into
+# infra/postgres/init-databases.sh — the idempotent-on-every-deploy pattern
+# came from here.
 
 networks:
   internal:
-  dokploy-network:
+  edge:
     external: true

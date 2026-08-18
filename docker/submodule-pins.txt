@@ -1,0 +1,13 @@
+# Pinned commits for the app submodules (mirror of git submodule status).
+# Kept in sync manually when submodules are bumped; used by the root Dockerfile
+# to clone each app at the exact commit deployed.
+roguelike b644ac4d21b67f84f036b709f62ed4abada2a147
+life 0a72d221fa6a6df42f2f079fa10afd2c06013691
+recipebox 9f0ca2e8e15312aed4ff8f3bfd46591e7f1b23f3
+tilemap ef6c137bf10d0e7861fdfae6397cab5c9ca33f71
+voting-app-react 4a9178380146f6c47ec2d50906b47508aeaf0910
+socket-io-chat-app 45b3e62a39df29d2e02d6fbb4d2eb0f5303785a7
+react-comment-box da112f8186f6624eff414221dc34ee071d579a13
+url-shortener 580e303243db4216c4a1d96228bb5117ef9f0394
+spaced-repitition af1c62bedd9e2bd0bb2041972dbc42c093112920
+trello eb4ae9d36ac37a546ba2eb6f8f300b2cdf29747a

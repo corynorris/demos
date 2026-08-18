@@ -1,0 +1,9 @@
+.git
+.gitmodules
+**/node_modules
+**/dist
+**/build
+**/.vite
+.env
+.env.prod
+*.log

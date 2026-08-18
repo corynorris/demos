@@ -175,7 +175,7 @@ COPY --from=trello-assets /priv/static /app/trello/priv/static
 # supervisord + per-app start scripts
 COPY docker/supervisord.conf /etc/supervisord.conf
 COPY docker/bin/ /usr/local/bin/
-RUN chmod +x /usr/local/bin/start-*.sh
+RUN chmod +x /usr/local/bin/start-*.sh /app/srs/docker-entrypoint.sh
 
 EXPOSE 80
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]

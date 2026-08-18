@@ -10,3 +10,4 @@ dist/
 
 # Playwright MCP session artifacts
 .playwright-mcp/
+docker/landing/preview.png

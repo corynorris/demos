@@ -5,28 +5,99 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Demos — corynorris.me</title>
 <style>
-body{font-family:system-ui,sans-serif;max-width:640px;margin:2rem auto;padding:0 1rem;line-height:1.6;color:#333}
-h1{margin-bottom:.25rem}
-ul{padding-left:1.25rem}
-li{margin:.4rem 0}
-a{color:#0366d6;text-decoration:none}
-a:hover{text-decoration:underline}
+:root { color-scheme: dark; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: radial-gradient(1200px 600px at 20% -10%, #1e293b 0%, #0f172a 45%, #0b1120 100%);
+  min-height: 100vh;
+  color: #e2e8f0;
+  padding: 3rem 1.5rem 4rem;
+}
+header { max-width: 1200px; margin: 0 auto 2.5rem; }
+header h1 { font-size: 2.2rem; letter-spacing: -0.02em; }
+header p { color: #94a3b8; margin-top: .5rem; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+a.card {
+  display: block;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+a.card:hover, a.card:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0,0,0,.4);
+  border-color: #475569;
+}
+a.card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: top;
+  background: #0f172a;
+}
+.card-body { padding: 1rem 1.1rem 1.15rem; }
+.card-body h2 { font-size: 1.05rem; margin-bottom: .25rem; }
+.card-body p { font-size: .875rem; color: #94a3b8; }
 </style>
 </head>
 <body>
-<h1>Demos</h1>
-<p>Collection of demo apps:</p>
-<ul>
-<li><a href="/roguelike">/roguelike</a> — Dungeon crawler</li>
-<li><a href="/life">/life</a> — Conway's Game of Life</li>
-<li><a href="/recipebox">/recipebox</a> — Recipe manager</li>
-<li><a href="/tilemap">/tilemap</a> — Tile-to-texture mapper</li>
-<li><a href="/voting">/voting</a> — Tournament voting</li>
-<li><a href="/chat">/chat</a> — Real-time chat</li>
-<li><a href="/comments">/comments</a> — Comment box</li>
-<li><a href="/s">/s</a> — URL shortener</li>
-<li><a href="/srs">/srs</a> — Spaced repetition</li>
-<li><a href="/trello">/trello</a> — Kanban board (Trello clone)</li>
-</ul>
+<header>
+  <h1>Demos</h1>
+  <p>Collection of interactive demos — click a card to open it.</p>
+</header>
+<div class="grid">
+  <a class="card" href="/roguelike/">
+    <img src="/screenshots/roguelike.jpg" alt="Dungeon Crawler" loading="lazy">
+    <div class="card-body"><h2>Dungeon Crawler</h2><p>Turn-based dungeon crawler</p></div>
+  </a>
+  <a class="card" href="/life/">
+    <img src="/screenshots/life.jpg" alt="Game of Life" loading="lazy">
+    <div class="card-body"><h2>Game of Life</h2><p>Conway's cellular automaton playground</p></div>
+  </a>
+  <a class="card" href="/recipebox/">
+    <img src="/screenshots/recipebox.jpg" alt="Recipe Manager" loading="lazy">
+    <div class="card-body"><h2>Recipe Manager</h2><p>Create, browse and manage recipes</p></div>
+  </a>
+  <a class="card" href="/tilemap/">
+    <img src="/screenshots/tilemap.jpg" alt="Tile-to-Texture Mapper" loading="lazy">
+    <div class="card-body"><h2>Tile-to-Texture Mapper</h2><p>Tile map editor for game art</p></div>
+  </a>
+  <a class="card" href="/voting/">
+    <img src="/screenshots/voting.jpg" alt="Tournament Voting" loading="lazy">
+    <div class="card-body"><h2>Tournament Voting</h2><p>Live tournament voting with Socket.IO</p></div>
+  </a>
+  <a class="card" href="/chat/">
+    <img src="/screenshots/chat.jpg" alt="Real-time Chat" loading="lazy">
+    <div class="card-body"><h2>Real-time Chat</h2><p>Multi-room chat with Socket.IO</p></div>
+  </a>
+  <a class="card" href="/comments/">
+    <img src="/screenshots/comments.jpg" alt="Comment Box" loading="lazy">
+    <div class="card-body"><h2>Comment Box</h2><p>React-powered comment threads</p></div>
+  </a>
+  <a class="card" href="/s/">
+    <img src="/screenshots/s.jpg" alt="URL Shortener" loading="lazy">
+    <div class="card-body"><h2>URL Shortener</h2><p>Shorten URLs and share them anywhere</p></div>
+  </a>
+  <a class="card" href="/srs/">
+    <img src="/screenshots/srs.jpg" alt="Spaced Repetition" loading="lazy">
+    <div class="card-body"><h2>Spaced Repetition</h2><p>AI-generated flashcards and review sessions</p></div>
+  </a>
+  <a class="card" href="/trello/">
+    <img src="/screenshots/trello.jpg" alt="Kanban Board" loading="lazy">
+    <div class="card-body"><h2>Kanban Board</h2><p>Phoenix LiveView kanban board</p></div>
+  </a>
+</div>
 </body>
 </html>

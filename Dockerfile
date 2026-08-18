@@ -160,6 +160,7 @@ COPY docker/nginx-dokku.conf /etc/nginx/conf.d/default.conf
 # static SPAs served directly by nginx
 COPY --from=static-builder /dist /usr/share/nginx/html
 COPY docker/landing/index.html /usr/share/nginx/html/index.html
+COPY docker/landing/screenshots /usr/share/nginx/html/screenshots
 
 # node backends
 COPY --from=node-builder /out/voting /app/voting

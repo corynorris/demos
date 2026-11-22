@@ -146,6 +146,12 @@ ARG PUBLIC_URL=/trello
 ENV PUBLIC_URL=${PUBLIC_URL}
 RUN npx webpack --mode production
 
+# Fingerprint the freshly built assets so `cache_static_manifest` resolves (and
+# hashed assets get long-lived caching) instead of warning on every boot.
+FROM trello-builder AS trello-digest
+COPY --from=trello-assets /priv/static /app/priv/static
+RUN MIX_ENV=prod mix phx.digest
+
 # ════════════════════════════════════════════════════════════════════════════
 # Runtime — nginx router + all backends, supervised
 # ════════════════════════════════════════════════════════════════════════════
@@ -169,10 +175,9 @@ COPY --from=node-builder /out/comments /app/comments
 COPY --from=node-builder /out/shortener /app/shortener
 COPY --from=node-builder /out/srs /app/srs
 
-# trello (compiled app + assets)
-COPY --from=trello-builder /app /app/trello
-COPY --from=trello-builder /root/.mix /root/.mix
-COPY --from=trello-assets /priv/static /app/trello/priv/static
+# trello (compiled app + digested assets)
+COPY --from=trello-digest /app /app/trello
+COPY --from=trello-digest /root/.mix /root/.mix
 
 # supervisord + per-app start scripts
 COPY docker/supervisord.conf /etc/supervisord.conf

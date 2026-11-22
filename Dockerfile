@@ -31,7 +31,7 @@ RUN set -eu; \
 # ════════════════════════════════════════════════════════════════════════════
 FROM node:22-alpine AS static-builder
 ENV CI=true
-RUN corepack enable && corepack prepare pnpm@10.15.1 --activate && mkdir -p /dist
+RUN corepack enable && corepack prepare pnpm@11.0.8 --activate && mkdir -p /dist
 COPY --from=fetch /src/roguelike /src/roguelike
 COPY --from=fetch /src/life /src/life
 COPY --from=fetch /src/recipebox /src/recipebox
@@ -53,7 +53,7 @@ RUN set -eu; \
 # ════════════════════════════════════════════════════════════════════════════
 FROM node:22-alpine AS node-builder
 ENV CI=true
-RUN corepack enable && corepack prepare pnpm@10.15.1 --activate && mkdir -p /out
+RUN corepack enable && corepack prepare pnpm@11.0.8 --activate && mkdir -p /out
 COPY scripts/dokku/set-vite-base.sh /usr/local/bin/set-vite-base.sh
 RUN chmod +x /usr/local/bin/set-vite-base.sh
 

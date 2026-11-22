@@ -1,13 +1,13 @@
 # Pinned commits for the app submodules (mirror of git submodule status).
 # Kept in sync manually when submodules are bumped; used by the root Dockerfile
 # to clone each app at the exact commit deployed.
-roguelike bda0545661deca9e4f729cda718d631c3f48ae8a
-life 872d2338f53adf33de58ac25e7988faba010f091
-recipebox 6900c65b42e7591e9dd4905440002632487592a5
-tilemap deaf9790330a06443359b366feaabb756ad02c80
-voting-app-react 70f0b8ccda8e4ab9b8ca71f69aaefafce09cd1fb
-socket-io-chat-app 7c2cf8e502bb0280ad3bebdd0d846ba1c801ba39
-react-comment-box c590a0528a852592a3a67641db3707ada052775e
-url-shortener 5a3c84458aa8128a5a415505f50de4216f3570c4
-spaced-repitition f1ee0a01396d9542c2edac085fdcb05f51320af6
-trello 419b0c2e3c1498ce98b1e5115dc3495913c4593e
+roguelike 7595faf5cd604979ee51dfc2f4419f8c3e6c8dca
+life 700f977fbd5c39745f1cf3ca9d20a7e81bca5123
+recipebox f57c0cbd83cb4be40c6d73d9d356e26fc3f93f41
+tilemap 5df5d6a0ed66fa3a8df41718ffcec76d09b2db66
+voting-app-react 0b502694f9cf730c9ef60af117935919f4410730
+socket-io-chat-app 94c0835f1f9599877ed763c13a29000af39366b2
+react-comment-box c57138a93732fee4a0b34fe704fe9167bf21f8fe
+url-shortener 7a002addcf9a6609db8d80f9776c75963d83473d
+spaced-repitition d3df0a71b98df51c60809d366de07014d22fba05
+trello 365c8167199674c3bf8ebbd198ba53b5485b72a8
